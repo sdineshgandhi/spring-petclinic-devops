@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'ubuntu26' }
+    agent { label 'ubuntu-wsl' }
 
     stages {
 
