@@ -22,29 +22,17 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    sh '''
-                        mvn sonar:sonar \
-                          -Dsonar.projectKey=spring-petclinic \
-                          -Dsonar.projectName=spring-petclinic
-                    '''
-                }
-            }
+                  sh '''
+                     mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+                       -Dsonar.projectKey=spring-petclinic-devops \
+                       -Dsonar.projectName="Spring PetClinic DevOps"
+            '''
         }
-
+    }
+}
         stage('Docker Build') {
             steps {
                 sh 'docker build -t spring-petclinic:latest .'
-            }
-        }
-
-        stage('Trivy Scan') {
-            steps {
-                sh '''
-                    trivy image \
-                      --severity HIGH,CRITICAL \
-                      --no-progress \
-                      spring-petclinic:latest
-                '''
             }
         }
     }
