@@ -35,5 +35,13 @@ pipeline {
                 sh 'docker build -t spring-petclinic:latest .'
             }
         }
+        
+        stage('Trivy Scan') {
+            steps {
+                sh '''
+                   trivy image spring-petclinic:latest
+            '''
+           }
+        } 
     }
 }
