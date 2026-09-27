@@ -46,17 +46,17 @@ pipeline {
                     )
                 ]) {
                     sh '''
-                        echo "$NEXUS_PASSWORD" | docker login 172.22.100.88:8892 \
+                        echo "$NEXUS_PASSWORD" | docker login 172.22.100.88:8891 \
                             -u "$NEXUS_USER" \
                             --password-stdin
 
                         docker tag spring-petclinic:latest \
-                            172.22.100.88:8892/petclinic-docker/spring-petclinic:${BUILD_NUMBER}
+                            172.22.100.88:8891/petclinic-docker/spring-petclinic:${BUILD_NUMBER}
 
                         docker push \
-                            172.22.100.88:8892/petclinic-docker/spring-petclinic:${BUILD_NUMBER}
+                            172.22.100.88:8891/petclinic-docker/spring-petclinic:${BUILD_NUMBER}
 
-                        docker logout 172.22.100.88:8892
+                        docker logout 172.22.100.88:8891
                     '''
                 }
             }
