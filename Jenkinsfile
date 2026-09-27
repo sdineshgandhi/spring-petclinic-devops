@@ -5,8 +5,10 @@ pipeline {
         IMAGE_NAME = 'sdineshgandhi/spring-petclinic'
         IMAGE_TAG  = "${BUILD_NUMBER}"
 
-        OCTOPUS_SPACE   = 'Default'
-        OCTOPUS_PROJECT = 'Spring Petclinic'
+        // Octopus configuration
+        OCTOPUS_SERVER_ID = 'octopus-server'
+        OCTOPUS_SPACE_ID  = 'Spaces-1'
+        OCTOPUS_PROJECT   = 'Petclinic'
     }
 
     stages {
@@ -69,32 +71,24 @@ pipeline {
 
         stage('Create Octopus Release') {
             steps {
-                withCredentials([
-                    string(
-                        credentialsId: 'octopus-api-key',
-                        variable: 'OCTOPUS_API_KEY'
-                    ),
-                    string(
-                        credentialsId: 'octopus-url',
-                        variable: 'OCTOPUS_URL'
-                    )
-                ]) {
-                    sh '''
-                        octopus release create \
-                            --server "$OCTOPUS_URL" \
-                            --apiKey "$OCTOPUS_API_KEY" \
-                            --space "$OCTOPUS_SPACE" \
-                            --project "$OCTOPUS_PROJECT" \
-                            --releaseNumber "$BUILD_NUMBER"
-                    '''
-                }
+                octopusCreateRelease(
+                    serverId: "${OCTOPUS_SERVER_ID}",
+                    spaceId: "${OCTOPUS_SPACE_ID}",
+                    project: "${OCTOPUS_PROJECT}",
+                    releaseVersion: "${BUILD_NUMBER}",
+                    toolId: 'Default',
+                    deployThisRelease: false,
+                    jenkinsUrlLinkback: true,
+                    releaseNotes: false,
+                    verboseLogging: true
+                )
             }
         }
     }
 
     post {
         success {
-            echo "Petclinic CI/CD pipeline completed successfully."
+            echo "Petclinic pipeline completed successfully."
             echo "Docker image: ${IMAGE_NAME}:${IMAGE_TAG}"
             echo "Octopus release: ${BUILD_NUMBER}"
         }
