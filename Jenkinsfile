@@ -5,10 +5,8 @@ pipeline {
         IMAGE_NAME = 'sdineshgandhi/spring-petclinic'
         IMAGE_TAG  = "${BUILD_NUMBER}"
 
-        // Octopus Deploy
-        OCTOPUS_URL     = 'http://172.22.100.88:8883'
         OCTOPUS_SPACE   = 'Default'
-        OCTOPUS_PROJECT = 'Petclinic'
+        OCTOPUS_PROJECT = 'Spring Petclinic'
     }
 
     stages {
@@ -25,9 +23,7 @@ pipeline {
 
         stage('Maven Build') {
             steps {
-                sh '''
-                    mvn clean package
-                '''
+                sh 'mvn clean package'
             }
         }
 
@@ -77,6 +73,10 @@ pipeline {
                     string(
                         credentialsId: 'octopus-api-key',
                         variable: 'OCTOPUS_API_KEY'
+                    ),
+                    string(
+                        credentialsId: 'octopus-url',
+                        variable: 'OCTOPUS_URL'
                     )
                 ]) {
                     sh '''
@@ -94,7 +94,7 @@ pipeline {
 
     post {
         success {
-            echo "Petclinic CI pipeline completed successfully."
+            echo "Petclinic CI/CD pipeline completed successfully."
             echo "Docker image: ${IMAGE_NAME}:${IMAGE_TAG}"
             echo "Octopus release: ${BUILD_NUMBER}"
         }
