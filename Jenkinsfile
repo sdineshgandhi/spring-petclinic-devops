@@ -35,6 +35,45 @@ pipeline {
                 '''
             }
         }
+          
+         cat Jenkinsfile
+pipeline {
+    agent { label 'ubuntu-wsl' }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                git(
+                    credentialsId: 'github-cred',
+                    url: 'https://github.com/sdineshgandhi/spring-petclinic-devops.git',
+                    branch: 'main'
+                )
+            }
+        }
+
+        stage('Maven Build') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                sh 'docker build -t spring-petclinic:latest .'
+            }
+        }
+
+        stage('Trivy Scan') {
+            steps {
+                sh '''
+                    trivy image \
+                      --severity HIGH,CRITICAL \
+                      --no-progress \
+                      spring-petclinic:latest
+                '''
+            }
+        }
 
         stage('Docker Push to Nexus') {
             steps {
@@ -63,3 +102,4 @@ pipeline {
         }
     }
 }
+
