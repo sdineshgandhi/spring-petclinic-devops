@@ -19,29 +19,47 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('SonarQube') {
-                  sh '''
-                     mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-                       -Dsonar.projectKey=spring-petclinic-devops \
-                       -Dsonar.projectName="Spring PetClinic DevOps"
-            '''
-        }
-    }
-}
         stage('Docker Build') {
             steps {
                 sh 'docker build -t spring-petclinic:latest .'
             }
         }
-        
+
         stage('Trivy Scan') {
             steps {
                 sh '''
-                   trivy image spring-petclinic:latest
-            '''
-           }
-        } 
+                    trivy image \
+                      --severity HIGH,CRITICAL \
+                      --no-progress \
+                      spring-petclinic:latest
+                '''
+            }
+        }
+
+        stage('Docker Push to Nexus') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'nexus-cred',
+                        usernameVariable: 'NEXUS_USER',
+                        passwordVariable: 'NEXUS_PASSWORD'
+                    )
+                ]) {
+                    sh '''
+                        echo "$NEXUS_PASSWORD" | docker login 172.22.100.88:8892 \
+                            -u "$NEXUS_USER" \
+                            --password-stdin
+
+                        docker tag spring-petclinic:latest \
+                            172.22.100.88:8892/petclinic-docker/spring-petclinic:${BUILD_NUMBER}
+
+                        docker push \
+                            172.22.100.88:8892/petclinic-docker/spring-petclinic:${BUILD_NUMBER}
+
+                        docker logout 172.22.100.88:8892
+                    '''
+                }
+            }
+        }
     }
 }
