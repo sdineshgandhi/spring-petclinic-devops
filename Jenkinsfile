@@ -61,5 +61,24 @@ pipeline {
                 }
             }
         }
+         stage('Create Octopus Release') {
+             steps {
+                 withCredentials([
+                     string(
+                         credentialsId: 'octopus-api-key',
+                         variable: 'OCTOPUS_API_KEY'
+            )
+        ]) {
+            sh '''
+                octopus release create \
+                    --server "$OCTOPUS_URL" \
+                    --apiKey "$OCTOPUS_API_KEY" \
+                    --space "$OCTOPUS_SPACE" \
+                    --project "$OCTOPUS_PROJECT" \
+                    --releaseNumber "$BUILD_NUMBER"
+            '''
+        }
+    }
+}
     }
 }
