@@ -1,6 +1,16 @@
 pipeline {
     agent { label 'ubuntu-wsl' }
 
+    environment {
+        IMAGE_NAME = 'sdineshgandhi/spring-petclinic'
+        IMAGE_TAG  = "${BUILD_NUMBER}"
+
+        // Octopus Deploy
+        OCTOPUS_URL     = 'http://172.22.100.88:8883'
+        OCTOPUS_SPACE   = 'Default'
+        OCTOPUS_PROJECT = 'Petclinic'
+    }
+
     stages {
 
         stage('Checkout') {
@@ -15,70 +25,82 @@ pipeline {
 
         stage('Maven Build') {
             steps {
-                sh 'mvn clean package'
+                sh '''
+                    mvn clean package
+                '''
             }
         }
 
         stage('Docker Build') {
             steps {
-                sh 'docker build -t spring-petclinic:latest .'
+                sh '''
+                    docker build \
+                        -t ${IMAGE_NAME}:${IMAGE_TAG} \
+                        .
+                '''
             }
         }
 
         stage('Trivy Scan') {
             steps {
                 sh '''
-                    trivy image \
-                      --severity HIGH,CRITICAL \
-                      --no-progress \
-                      spring-petclinic:latest
+                    trivy image ${IMAGE_NAME}:${IMAGE_TAG}
                 '''
             }
         }
 
-        stage('Docker Push to Docker Hub') {
+        stage('Docker Push') {
             steps {
                 withCredentials([
                     usernamePassword(
                         credentialsId: 'dockerhub-cred',
-                        usernameVariable: 'DOCKERHUB_USER',
-                        passwordVariable: 'DOCKERHUB_TOKEN'
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASSWORD'
                     )
                 ]) {
                     sh '''
-                        echo "$DOCKERHUB_TOKEN" | docker login \
-                            -u "$DOCKERHUB_USER" \
+                        echo "$DOCKER_PASSWORD" | docker login \
+                            -u "$DOCKER_USER" \
                             --password-stdin
 
-                        docker tag spring-petclinic:latest \
-                            "$DOCKERHUB_USER/spring-petclinic:${BUILD_NUMBER}"
-
-                        docker push \
-                            "$DOCKERHUB_USER/spring-petclinic:${BUILD_NUMBER}"
+                        docker push ${IMAGE_NAME}:${IMAGE_TAG}
 
                         docker logout
                     '''
                 }
             }
         }
-         stage('Create Octopus Release') {
-             steps {
-                 withCredentials([
-                     string(
-                         credentialsId: 'octopus-api-key',
-                         variable: 'OCTOPUS_API_KEY'
-            )
-        ]) {
-            sh '''
-                octopus release create \
-                    --server "$OCTOPUS_URL" \
-                    --apiKey "$OCTOPUS_API_KEY" \
-                    --space "$OCTOPUS_SPACE" \
-                    --project "$OCTOPUS_PROJECT" \
-                    --releaseNumber "$BUILD_NUMBER"
-            '''
+
+        stage('Create Octopus Release') {
+            steps {
+                withCredentials([
+                    string(
+                        credentialsId: 'octopus-api-key',
+                        variable: 'OCTOPUS_API_KEY'
+                    )
+                ]) {
+                    sh '''
+                        octopus release create \
+                            --server "$OCTOPUS_URL" \
+                            --apiKey "$OCTOPUS_API_KEY" \
+                            --space "$OCTOPUS_SPACE" \
+                            --project "$OCTOPUS_PROJECT" \
+                            --releaseNumber "$BUILD_NUMBER"
+                    '''
+                }
+            }
         }
     }
-}
+
+    post {
+        success {
+            echo "Petclinic CI pipeline completed successfully."
+            echo "Docker image: ${IMAGE_NAME}:${IMAGE_TAG}"
+            echo "Octopus release: ${BUILD_NUMBER}"
+        }
+
+        failure {
+            echo "Pipeline failed. Check the failed stage in the Jenkins console."
+        }
     }
 }
