@@ -7,7 +7,7 @@ pipeline {
 
         // Octopus configuration
         OCTOPUS_SERVER_ID = 'octopus-server'
-        OCTOPUS_SPACE_ID  = 'Default'
+        OCTOPUS_SPACE_ID  = 'Spaces-1'
         OCTOPUS_PROJECT   = 'Petclinic'
     }
 
