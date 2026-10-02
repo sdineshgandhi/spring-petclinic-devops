@@ -30,7 +30,7 @@ spec:
     spec:
       containers:
         - name: workload
-          image: sdineshgandhi/spring-petclinic:#{ImageTag}
+          image: sdineshgandhi/spring-petclinic:#{Octopus.Release.Number}
           imagePullPolicy: Always
           env:
             - name: SPRING_PROFILES_ACTIVE
