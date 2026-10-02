@@ -6,9 +6,9 @@ pipeline {
         IMAGE_TAG  = "${BUILD_NUMBER}"
 
         // Octopus configuration
-        OCTOPUS_SERVER_ID = 'octopus-server'
-        OCTOPUS_SPACE_ID  = 'Spaces-1'
-        OCTOPUS_PROJECT   = 'Petclinic'
+        OCTOPUS_SERVER_ID = 'octopus-aws'
+        OCTOPUS_SPACE_ID  = 'Spaces-2'
+        OCTOPUS_PROJECT   = 'petclinic'
     }
 
     stages {
@@ -88,13 +88,16 @@ pipeline {
 
     post {
         success {
-            echo "Petclinic pipeline completed successfully."
+            echo "========================================"
+            echo "Petclinic pipeline completed successfully"
             echo "Docker image: ${IMAGE_NAME}:${IMAGE_TAG}"
             echo "Octopus release: ${BUILD_NUMBER}"
+            echo "Octopus space: ${OCTOPUS_SPACE_ID}"
+            echo "========================================"
         }
 
         failure {
-            echo "Pipeline failed. Check the failed stage in the Jenkins console."
+            echo "Pipeline failed. Check the failed stage in Jenkins."
         }
     }
 }
