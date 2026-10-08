@@ -1,12 +1,12 @@
 pipeline {
-    agent { label 'ubuntu-wsl' }
+    agent { label 'local-agent' }
 
     environment {
         IMAGE_NAME = 'sdineshgandhi/spring-petclinic'
         IMAGE_TAG  = "${BUILD_NUMBER}"
 
         // Octopus configuration
-        OCTOPUS_SERVER_ID = 'octopus-aws'
+        OCTOPUS_SERVER_ID = 'octopus-local'
         OCTOPUS_SPACE_ID  = 'Spaces-2'
         OCTOPUS_PROJECT   = 'petclinic'
     }
@@ -18,7 +18,7 @@ pipeline {
                 git(
                     credentialsId: 'github-cred',
                     url: 'https://github.com/sdineshgandhi/spring-petclinic-devops.git',
-                    branch: 'main'
+                    branch: 'local'
                 )
             }
         }
